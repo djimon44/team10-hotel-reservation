@@ -5,6 +5,7 @@ import cors from 'cors';
 import pool from './db.js';
 import roomTypesRouter from './routes/roomTypes.js';
 import roomsRouter from './routes/rooms.js';
+import reservationsRouter from './routes/reservations.js';
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get('/api/health', async (req, res) => {
 // Feature routers
 app.use('/api/room-types', roomTypesRouter);
 app.use('/api/rooms', roomsRouter);
+app.use('/api/reservations', reservationsRouter);
 
 // Unknown /api routes get a JSON 404 instead of Express's HTML page.
 app.use('/api', (req, res) => {
