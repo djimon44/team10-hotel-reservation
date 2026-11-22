@@ -8,15 +8,32 @@ export function validateBody(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);
     if (!result.success) {
-      const details = result.error.issues.map((issue) => ({
-        field: issue.path.join('.') || 'body',
-        message: issue.message,
-      }));
-      return res.status(400).json({ error: 'Validation failed', details });
+      return sendValidationError(res, result.error, 'body');
     }
     req.body = result.data;
     next();
   };
+}
+
+// validateQuery(schema) does the same for the ?key=value part of the URL.
+// req.query is read-only in Express 5, so the cleaned data goes to res.locals.query.
+export function validateQuery(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.query);
+    if (!result.success) {
+      return sendValidationError(res, result.error, 'query');
+    }
+    res.locals.query = result.data;
+    next();
+  };
+}
+
+function sendValidationError(res, error, source) {
+  const details = error.issues.map((issue) => ({
+    field: issue.path.join('.') || source,
+    message: issue.message,
+  }));
+  return res.status(400).json({ error: 'Validation failed', details });
 }
 
 // Rejects ids like 'abc', '0' or '1.5' before they reach Postgres.

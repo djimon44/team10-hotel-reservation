@@ -2,7 +2,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import pool from '../db.js';
-import { validateBody, validateId } from '../middleware/validate.js';
+import { validateBody, validateId, validateQuery } from '../middleware/validate.js';
+import { checkInDate, dateString } from '../utils/dates.js';
 import { PG, translateDbError } from '../utils/dbErrors.js';
 
 const router = Router();
@@ -21,6 +22,18 @@ const createSchema = updateSchema.extend({
   is_active: z.boolean().default(true),
 });
 
+// Query values always arrive as strings, so guests is converted to a number.
+const availabilitySchema = z
+  .object({
+    checkIn: checkInDate,
+    checkOut: dateString,
+    guests: z.coerce.number().int().min(1).max(20).default(1),
+  })
+  .refine((query) => query.checkOut > query.checkIn, {
+    path: ['checkOut'],
+    message: 'Check-out must be after check-in',
+  });
+
 const saveErrors = {
   [PG.UNIQUE_VIOLATION]: [409, 'A room with this number already exists'],
   [PG.FOREIGN_KEY_VIOLATION]: [400, 'The selected room type does not exist'],
@@ -31,7 +44,33 @@ const deleteErrors = {
   [PG.RESTRICT_VIOLATION]: [409, 'Cannot delete a room that has reservations; deactivate it instead'],
 };
 
-// When GET /available is added, declare it above /:id, otherwise 'available' is read as an id.
+// Public. Must stay above /:id, otherwise 'available' is read as an id.
+// A room is taken if a non-cancelled booking starts before our check-out and ends
+// after our check-in. Same rule as the reservations_no_overlap constraint.
+router.get('/available', validateQuery(availabilitySchema), async (req, res) => {
+  const { checkIn, checkOut, guests } = res.locals.query;
+  const { rows } = await pool.query(
+    `SELECT r.id, r.room_number, r.floor, r.room_type_id,
+            rt.name AS room_type_name, rt.description, rt.capacity, rt.price_per_night,
+            $2::date - $1::date AS nights,
+            ($2::date - $1::date) * rt.price_per_night AS total_price
+     FROM rooms r
+     JOIN room_types rt ON rt.id = r.room_type_id
+     WHERE r.is_active
+       AND rt.capacity >= $3
+       AND NOT EXISTS (
+         SELECT 1
+         FROM reservations b
+         WHERE b.room_id = r.id
+           AND b.status <> 'cancelled'
+           AND b.check_in < $2
+           AND b.check_out > $1
+       )
+     ORDER BY rt.price_per_night, r.room_number`,
+    [checkIn, checkOut, guests],
+  );
+  res.json(rows);
+});
 
 // TODO(auth): requireAuth, requireRole('admin', 'receptionist')
 router.get('/', async (req, res) => {
