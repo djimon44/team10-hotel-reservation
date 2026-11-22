@@ -14,6 +14,12 @@ if (!process.env.DATABASE_URL) {
 const DATE_OID = 1082;
 pg.types.setTypeParser(DATE_OID, (value) => value);
 
+// Return NUMERIC columns (our prices) as numbers instead of strings like '190.00',
+// so the client can send back exactly what it received. NUMERIC(10,2) is small
+// enough to fit in a JS number. Do money arithmetic in SQL, not in JS.
+const NUMERIC_OID = 1700;
+pg.types.setTypeParser(NUMERIC_OID, Number);
+
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 
 export default pool;
