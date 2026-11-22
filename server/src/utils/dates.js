@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 // Today on the server's calendar. toISOString() would give the UTC date, which is
 // still yesterday in Tbilisi between 00:00 and 04:00.
-function today() {
+export function today() {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
