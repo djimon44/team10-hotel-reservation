@@ -3,6 +3,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import pool from './db.js';
+import roomTypesRouter from './routes/roomTypes.js';
+import roomsRouter from './routes/rooms.js';
 
 const app = express();
 
@@ -20,8 +22,9 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Feature routers are mounted here as they are added, e.g.:
-// app.use('/api/room-types', roomTypesRouter);
+// Feature routers
+app.use('/api/room-types', roomTypesRouter);
+app.use('/api/rooms', roomsRouter);
 
 // Unknown /api routes get a JSON 404 instead of Express's HTML page.
 app.use('/api', (req, res) => {
@@ -30,8 +33,9 @@ app.use('/api', (req, res) => {
 
 // Central error handler. Express 5 forwards errors thrown in async handlers here.
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(err.status || 500).json({ error: err.status ? err.message : 'Internal server error' });
+  const status = err.status || 500;
+  if (status >= 500) console.error(err); // 4xx are the caller's mistakes, no stack trace needed
+  res.status(status).json({ error: status < 500 ? err.message : 'Internal server error' });
 });
 
 const port = Number(process.env.PORT) || 4000;
