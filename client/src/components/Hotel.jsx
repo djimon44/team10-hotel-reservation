@@ -16,6 +16,7 @@ export function HotelLayout({ user, onLogout, children }) {
             <NavLink to="/" end>Find a room</NavLink>
             {user?.role === 'guest' && <NavLink to="/my-bookings">My bookings</NavLink>}
             {['receptionist', 'admin'].includes(user?.role) && <NavLink to="/reception">Reception</NavLink>}
+            {user?.role === 'admin' && <NavLink to="/admin">Manage rooms</NavLink>}
             {user ? (
               <button className="button outline compact" onClick={async () => {
                 setMessage('')

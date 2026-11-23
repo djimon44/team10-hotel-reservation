@@ -12,6 +12,7 @@ export async function request(path, { method = 'GET', body, signal } = {}) {
   if (!response.ok) {
     const error = new Error(data?.error || 'The hotel service could not complete your request.')
     error.status = response.status
+    error.details = data?.details
     throw error
   }
   if (data === null) throw new Error('The hotel service returned an unreadable response.')

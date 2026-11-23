@@ -5,6 +5,7 @@ import { BookingAccess, BookingRole } from './components/BookingAccess.jsx'
 import { HotelLayout } from './components/Hotel.jsx'
 import { Search, Results, RoomDetail } from './pages/Rooms.jsx'
 import { MyBookings, Reception } from './pages/Reservations.jsx'
+import { Admin } from './pages/Admin.jsx'
 
 function HotelApp() {
   const session = useApiData('/auth/me')
@@ -24,6 +25,7 @@ function HotelApp() {
         <Route path="/login" element={<BookingAccess user={user} onSignIn={setUserOverride} />} />
         <Route path="/my-bookings" element={<BookingRole {...roleProps} roles={['guest']}><MyBookings /></BookingRole>} />
         <Route path="/reception" element={<BookingRole {...roleProps} roles={['receptionist', 'admin']}><Reception /></BookingRole>} />
+        <Route path="/admin" element={<BookingRole {...roleProps} roles={['admin']}><Admin /></BookingRole>} />
         <Route path="*" element={<section className="shell page"><h1>Page not found</h1><Link to="/">Find a room</Link></section>} />
       </Routes>
     </HotelLayout>
