@@ -7,21 +7,34 @@ if (!secret?.trim() || secret === 'change-me-to-a-long-random-string') {
   throw new Error('Set JWT_SECRET to a private random value in server/.env');
 }
 
-export function issueToken(userId) {
-  return jwt.sign({}, secret, {
+const cookieName = 'hotel_session';
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  path: '/api',
+};
+
+export function setSessionCookie(res, userId) {
+  const token = jwt.sign({}, secret, {
     algorithm: 'HS256',
     subject: String(userId),
     expiresIn: '1h',
   });
+  res.cookie(cookieName, token, { ...cookieOptions, maxAge: 60 * 60 * 1000 });
+}
+
+export function clearSessionCookie(res) {
+  res.clearCookie(cookieName, cookieOptions);
 }
 
 export async function requireAuth(req, res, next) {
-  const match = /^Bearer (\S+)$/i.exec(req.get('Authorization') || '');
-  if (!match) return res.status(401).json({ error: 'Authentication required' });
+  const token = req.cookies[cookieName];
+  if (!token) return res.status(401).json({ error: 'Authentication required' });
 
   let claims;
   try {
-    claims = jwt.verify(match[1], secret, { algorithms: ['HS256'] });
+    claims = jwt.verify(token, secret, { algorithms: ['HS256'] });
   } catch {
     return res.status(401).json({ error: 'Invalid or expired session' });
   }

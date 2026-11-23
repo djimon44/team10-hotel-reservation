@@ -2,11 +2,15 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import pool from '../db.js';
-import { issueToken, requireAuth } from '../middleware/auth.js';
+import { clearSessionCookie, requireAuth, setSessionCookie } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
 import { PG, translateDbError } from '../utils/dbErrors.js';
 
 const router = Router();
+router.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 const email = z.string().trim().toLowerCase().pipe(z.email().max(255));
 const password = z.string().min(1).refine(value => !bcrypt.truncates(value), {
   message: 'Password must be at most 72 bytes',
@@ -44,7 +48,13 @@ router.post('/login', validateBody(login), async (req, res) => {
     return res.status(401).json({ error: 'Incorrect email or password' });
   }
   const { id, full_name, email, role } = account;
-  res.json({ token: issueToken(id), user: { id, full_name, email, role } });
+  setSessionCookie(res, id);
+  res.json({ user: { id, full_name, email, role } });
+});
+
+router.post('/logout', (req, res) => {
+  clearSessionCookie(res);
+  res.status(204).end();
 });
 
 router.get('/me', requireAuth, (req, res) => res.json({ user: req.user }));
