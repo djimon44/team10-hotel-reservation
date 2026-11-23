@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import pool from '../db.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validateBody, validateId } from '../middleware/validate.js';
 import { PG, translateDbError } from '../utils/dbErrors.js';
 
@@ -51,8 +52,7 @@ router.get('/:id', validateId, async (req, res) => {
   res.json(rows[0]);
 });
 
-// TODO(auth): requireAuth, requireRole('admin')
-router.post('/', validateBody(createSchema), async (req, res) => {
+router.post('/', requireAuth, requireRole('admin'), validateBody(createSchema), async (req, res) => {
   const { name, description, capacity, price_per_night } = req.body;
   try {
     const { rows } = await pool.query(
@@ -67,8 +67,7 @@ router.post('/', validateBody(createSchema), async (req, res) => {
   }
 });
 
-// TODO(auth): requireAuth, requireRole('admin')
-router.put('/:id', validateId, validateBody(updateSchema), async (req, res) => {
+router.put('/:id', requireAuth, requireRole('admin'), validateId, validateBody(updateSchema), async (req, res) => {
   const { name, description, capacity, price_per_night } = req.body;
   try {
     const { rows } = await pool.query(
@@ -85,8 +84,7 @@ router.put('/:id', validateId, validateBody(updateSchema), async (req, res) => {
   }
 });
 
-// TODO(auth): requireAuth, requireRole('admin')
-router.delete('/:id', validateId, async (req, res) => {
+router.delete('/:id', requireAuth, requireRole('admin'), validateId, async (req, res) => {
   try {
     const { rowCount } = await pool.query('DELETE FROM room_types WHERE id = $1', [req.params.id]);
     if (rowCount === 0) return res.status(404).json({ error: 'Room type not found' });

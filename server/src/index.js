@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import pool from './db.js';
 import roomTypesRouter from './routes/roomTypes.js';
+import authRouter from './routes/auth.js';
 import roomsRouter from './routes/rooms.js';
 import reservationsRouter from './routes/reservations.js';
 
@@ -24,6 +25,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Feature routers
+app.use('/api/auth', authRouter);
 app.use('/api/room-types', roomTypesRouter);
 app.use('/api/rooms', roomsRouter);
 app.use('/api/reservations', reservationsRouter);
