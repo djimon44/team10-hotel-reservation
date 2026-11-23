@@ -1,4 +1,4 @@
-// Turns expected Postgres constraint errors into HTTP errors for the central error handler.
+// Turns expected Postgres errors into HTTP errors for the central error handler.
 
 export const PG = {
   UNIQUE_VIOLATION: '23505',

@@ -3,7 +3,7 @@
 const MAX_PG_INTEGER = 2147483647;
 
 // validateBody(schema) returns a middleware that checks req.body against a zod schema.
-// On success req.body is replaced by the cleaned data (trimmed, unknown fields removed).
+// On success req.body is replaced by the parsed data, with unknown fields removed.
 export function validateBody(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);

@@ -39,7 +39,7 @@ const bookingSchema = z
   });
 
 const bookingErrors = {
-  // Safety net only: the room lock in createBooking should make this unreachable.
+  // Safety net: the room lock in createBooking normally answers 409 before the insert.
   [PG.EXCLUSION_VIOLATION]: [409, 'This room is already booked for these dates'],
   [PG.NUMERIC_OVERFLOW]: [400, 'This stay is too long'],
 };
@@ -57,8 +57,9 @@ function findStatusError(reservation, newStatus) {
   return null;
 }
 
-// "AND status = $3" works like JPA's @Version: if someone changed the status after
-// we read it, nothing is updated and the caller answers 409 instead of overwriting.
+// Optimistic check: "AND status = $3" only matches if the status is still the one we
+// read. If someone changed it in the meantime, nothing is updated and the caller
+// answers 409 instead of overwriting their change.
 // Returns the updated reservation, or undefined if it changed in the meantime.
 async function changeStatus(id, fromStatus, toStatus) {
   const { rows } = await pool.query(
@@ -75,9 +76,9 @@ const CHANGED_MEANWHILE = 'The reservation was just changed by someone else, rel
 
 // Runs inside a transaction. Returns [HTTP status, response body].
 async function createBooking(client, guestId, { room_id, check_in, check_out, guests }) {
-  // FOR UPDATE locks this room's row until COMMIT, like JPA's PESSIMISTIC_WRITE.
-  // Two guests booking the same room now wait in line instead of colliding, so the
-  // second one sees the first one's booking in the overlap check below.
+  // FOR UPDATE locks this room's row until COMMIT. Two guests booking the same room
+  // wait in line instead of colliding, so the second one sees the first one's
+  // booking in the overlap check below.
   const found = await client.query(
     `SELECT r.is_active, rt.capacity
      FROM rooms r
