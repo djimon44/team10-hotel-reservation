@@ -4,6 +4,8 @@ export const PG = {
   UNIQUE_VIOLATION: '23505',
   FOREIGN_KEY_VIOLATION: '23503',
   RESTRICT_VIOLATION: '23001', // ON DELETE RESTRICT on Postgres 18+ (older versions use 23503)
+  EXCLUSION_VIOLATION: '23P01', // reservations_no_overlap: room already booked for these dates
+  NUMERIC_OVERFLOW: '22003',
 };
 
 // `responses` maps a Postgres error code to [HTTP status, message].
