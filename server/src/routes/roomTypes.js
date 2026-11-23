@@ -30,7 +30,7 @@ const deleteErrors = {
   [PG.RESTRICT_VIOLATION]: [409, 'Cannot delete a room type that still has rooms'],
 };
 
-// Public
+// Public, no login required.
 router.get('/', async (req, res) => {
   const { rows } = await pool.query(
     `SELECT id, name, description, capacity, price_per_night
@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
   res.json(rows);
 });
 
-// Public
+// Public, no login required.
 router.get('/:id', validateId, async (req, res) => {
   const { rows } = await pool.query(
     `SELECT id, name, description, capacity, price_per_night

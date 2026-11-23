@@ -1,7 +1,7 @@
 -- Hotel reservation system schema (PostgreSQL 16+).
 -- Run through `npm run db:reset`, which executes this file and then inserts seed data.
 
--- Drops make the reset repeatable. CASCADE also removes dependent constraints.
+-- Drops make the reset repeatable. CASCADE also drops objects that depend on these tables.
 DROP TABLE IF EXISTS reservations, rooms, room_types, users CASCADE;
 
 -- btree_gist lets a GiST index combine plain equality (room_id =) with
@@ -62,4 +62,4 @@ CREATE TABLE reservations (
 CREATE INDEX reservations_guest_id_idx ON reservations (guest_id);
 CREATE INDEX rooms_room_type_id_idx ON rooms (room_type_id);
 
--- Final milestone: amenities + room_type_amenities (many-to-many).
+-- TODO for the final milestone: amenities + room_type_amenities (many-to-many).
