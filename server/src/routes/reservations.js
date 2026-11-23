@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import pool from '../db.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validateBody, validateId } from '../middleware/validate.js';
 import { today } from '../utils/dates.js';
 
@@ -35,8 +36,7 @@ function findStatusError(reservation, newStatus) {
   return null;
 }
 
-// TODO(auth): requireAuth, requireRole('admin', 'receptionist')
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, requireRole('admin', 'receptionist'), async (req, res) => {
   // Columns are listed one by one so users.password_hash can never end up in the response.
   const { rows } = await pool.query(
     `SELECT b.id, b.status, b.check_in, b.check_out, b.check_out - b.check_in AS nights,
@@ -52,8 +52,7 @@ router.get('/', async (req, res) => {
   res.json(rows);
 });
 
-// TODO(auth): requireAuth, requireRole('admin', 'receptionist')
-router.patch('/:id/status', validateId, validateBody(statusSchema), async (req, res) => {
+router.patch('/:id/status', requireAuth, requireRole('admin', 'receptionist'), validateId, validateBody(statusSchema), async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 

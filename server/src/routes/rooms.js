@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import pool from '../db.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validateBody, validateId, validateQuery } from '../middleware/validate.js';
 import { checkInDate, dateString } from '../utils/dates.js';
 import { PG, translateDbError } from '../utils/dbErrors.js';
@@ -72,8 +73,7 @@ router.get('/available', validateQuery(availabilitySchema), async (req, res) => 
   res.json(rows);
 });
 
-// TODO(auth): requireAuth, requireRole('admin', 'receptionist')
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, requireRole('admin', 'receptionist'), async (req, res) => {
   const { rows } = await pool.query(
     `SELECT r.id, r.room_number, r.floor, r.room_type_id, r.is_active,
             rt.name AS room_type_name, rt.capacity, rt.price_per_night
@@ -84,8 +84,7 @@ router.get('/', async (req, res) => {
   res.json(rows);
 });
 
-// TODO(auth): requireAuth, requireRole('admin', 'receptionist')
-router.get('/:id', validateId, async (req, res) => {
+router.get('/:id', requireAuth, requireRole('admin', 'receptionist'), validateId, async (req, res) => {
   const { rows } = await pool.query(
     `SELECT r.id, r.room_number, r.floor, r.room_type_id, r.is_active,
             rt.name AS room_type_name, rt.capacity, rt.price_per_night
@@ -98,8 +97,7 @@ router.get('/:id', validateId, async (req, res) => {
   res.json(rows[0]);
 });
 
-// TODO(auth): requireAuth, requireRole('admin')
-router.post('/', validateBody(createSchema), async (req, res) => {
+router.post('/', requireAuth, requireRole('admin'), validateBody(createSchema), async (req, res) => {
   const { room_number, floor, room_type_id, is_active } = req.body;
   try {
     const { rows } = await pool.query(
@@ -114,8 +112,7 @@ router.post('/', validateBody(createSchema), async (req, res) => {
   }
 });
 
-// TODO(auth): requireAuth, requireRole('admin')
-router.put('/:id', validateId, validateBody(updateSchema), async (req, res) => {
+router.put('/:id', requireAuth, requireRole('admin'), validateId, validateBody(updateSchema), async (req, res) => {
   const { room_number, floor, room_type_id, is_active } = req.body;
   try {
     const { rows } = await pool.query(
@@ -132,8 +129,7 @@ router.put('/:id', validateId, validateBody(updateSchema), async (req, res) => {
   }
 });
 
-// TODO(auth): requireAuth, requireRole('admin')
-router.delete('/:id', validateId, async (req, res) => {
+router.delete('/:id', requireAuth, requireRole('admin'), validateId, async (req, res) => {
   try {
     const { rowCount } = await pool.query('DELETE FROM rooms WHERE id = $1', [req.params.id]);
     if (rowCount === 0) return res.status(404).json({ error: 'Room not found' });

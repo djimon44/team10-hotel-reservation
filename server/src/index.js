@@ -2,14 +2,19 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import { checkWriteOrigin, trustedOrigins } from './middleware/requestOrigin.js';
 import pool from './db.js';
 import roomTypesRouter from './routes/roomTypes.js';
+import authRouter from './routes/auth.js';
 import roomsRouter from './routes/rooms.js';
 import reservationsRouter from './routes/reservations.js';
 
 const app = express();
 
-app.use(cors());          // allow the React dev server to call the API
+app.use(cors({ origin: trustedOrigins, credentials: true }));
+app.use('/api', checkWriteOrigin);
+app.use(cookieParser());
 app.use(express.json());  // parse JSON request bodies into req.body
 
 // Health check: confirms the API is up and can reach the database.
@@ -24,6 +29,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Feature routers
+app.use('/api/auth', authRouter);
 app.use('/api/room-types', roomTypesRouter);
 app.use('/api/rooms', roomsRouter);
 app.use('/api/reservations', reservationsRouter);
