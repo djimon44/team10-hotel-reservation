@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+
+export const sessionUnauthorized = 'hotel:session-unauthorized'
 
 export async function request(path, { method = 'GET', body, signal } = {}) {
   const response = await fetch(`/api${path}`, {
@@ -10,6 +12,9 @@ export async function request(path, { method = 'GET', body, signal } = {}) {
   if (response.status === 204) return null
   const data = await response.json().catch(() => null)
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith('/auth/') && !signal?.aborted) {
+      window.dispatchEvent(new Event(sessionUnauthorized))
+    }
     const error = new Error(data?.error || 'The hotel service could not complete your request.')
     error.status = response.status
     error.details = data?.details
@@ -22,6 +27,7 @@ export async function request(path, { method = 'GET', body, signal } = {}) {
 export function useApiData(path) {
   const [result, setResult] = useState(null)
   const [revision, setRevision] = useState(0)
+  const reload = useCallback(() => setRevision(value => value + 1), [])
   useEffect(() => {
     if (!path) return
     const controller = new AbortController()
@@ -39,6 +45,6 @@ export function useApiData(path) {
     data: current?.data,
     error: current?.error,
     loading: Boolean(path && !current),
-    reload: () => setRevision((value) => value + 1),
+    reload,
   }
 }
