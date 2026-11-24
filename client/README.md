@@ -1,15 +1,12 @@
 # Mtkvari House client
 
-This client implements Member C's search, room results, booking, My bookings and reception views.
+The React client for the hotel: search, room pages, booking, sign in and registration, My bookings, the reception desk, and room management for admins.
 
 ## Run locally
 
-1. Copy `server/.env.example` to `server/.env` and configure your PostgreSQL connection and JWT secret. Run `npm ci` and then `npm run db:reset` in `server` to seed an empty local demo database. The reset recreates its tables.
-2. Run `npm run dev` in `server`.
-3. In `client`, run `npm ci` and `npm run dev`. Use http://localhost:5173 so requests match the server's development origin. Vite proxies `/api` to Express on port 4000.
-4. Use the guest or receptionist demo account printed by the seed command. The built-in sign-in page supports the booking and reception flows. Member A can wire in the team's auth pages in `src/App.jsx`.
+Follow **Run locally** in the [root README](../README.md). From the repository root, `npm run dev` starts this client together with the API. Open http://localhost:5173, where Vite forwards `/api` requests to Express on port 4000.
 
-Run `npm run lint` and `npm run build` in `client`.
+To check the client, run `npm run lint` and `npm run build` from the repository root.
 
 ## Photo credits
 
