@@ -10,7 +10,7 @@ const router = Router();
 
 // PUT replaces the whole row, so it requires every field.
 const updateSchema = z.object({
-  name: z.string().trim().min(1).max(80),
+  name: z.string().trim().min(1, 'Name is required').max(80),
   description: z.string().trim().max(1000).nullable(),
   capacity: z.number().int().min(1).max(20),
   price_per_night: z.number().positive().max(99999999.99).multipleOf(0.01),

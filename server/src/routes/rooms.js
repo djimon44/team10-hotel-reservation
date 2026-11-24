@@ -12,7 +12,7 @@ const router = Router();
 // PUT replaces the whole row, so it requires every field. If is_active had a default
 // here, editing an inactive room without sending it would silently reactivate the room.
 const updateSchema = z.object({
-  room_number: z.string().trim().min(1).max(10),
+  room_number: z.string().trim().min(1, 'Room number is required').max(10),
   floor: z.number().int().min(-5).max(100),
   room_type_id: z.number().int().positive().max(2147483647),
   is_active: z.boolean(),
